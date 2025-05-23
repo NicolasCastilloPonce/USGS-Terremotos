@@ -1,0 +1,52 @@
+services:
+    zookeeper:
+        image: confluentinc/cp-zookeeper:latest
+        environment:
+            ZOOKEEPER_CLIENT_PORT: 2181
+
+    kafka:
+        image: confluentinc/cp-kafka:latest
+        ports:
+            - "9092:9092"
+        depends_on:
+            - zookeeper
+        environment:
+            KAFKA_BROKER_ID: 1
+            KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+            KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+            KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+    usgs-poller:
+        build:
+            context: ./Poller
+        depends_on:
+            - kafka
+        working_dir: /app
+
+    usgs-consumer:
+        build:
+            context: ./Consumer
+        depends_on:
+            - kafka
+            - usgs-poller
+        volumes:
+            - ./Consumer:/app
+            - ./Consumer/earthquakes:/app/earthquakes
+        working_dir: /app
+
+    minio:
+        image: minio/minio:latest
+        container_name: minio
+        ports:
+            - "9000:9000"      # API
+            - "9001:9001"      # consola web
+        environment:
+            MINIO_ROOT_USER: minio
+            MINIO_ROOT_PASSWORD: minio123
+        command: server /data --console-address ":9001"
+        volumes:
+            - minio_data:/data
+
+volumes:
+  minio_data:

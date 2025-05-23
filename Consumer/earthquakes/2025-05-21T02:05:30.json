@@ -1,0 +1,12 @@
+{
+    "type": "FeatureCollection",
+    "metadata": {
+        "generated": 1747793151000,
+        "url": "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2025-05-21T02:05:30&endtime=",
+        "title": "USGS Earthquakes",
+        "status": 200,
+        "api": "1.14.1",
+        "count": 0
+    },
+    "features": []
+}
