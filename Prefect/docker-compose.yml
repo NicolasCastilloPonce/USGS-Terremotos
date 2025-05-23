@@ -1,0 +1,27 @@
+services:
+    prefect:
+        build: .
+        container_name: prefect
+        restart: always
+        volumes:
+            - ./flows:/app/flows
+            - .:/root/.prefect
+        entrypoint: ["prefect", "server", "start"]
+        environment:
+            - PREFECT_SERVER_API_HOST=0.0.0.0
+            - PREFECT_UI_URL=http://host:4200/api
+            - PREFECT_API_URL=http://host:4200/api
+            - PREFECT_API_DATABASE_CONNECTION_URL=postgresql+asyncpg://user:1234@postgres_prefect:5432/prefect_db
+            - PREFECT_API_DATABASE_ECHO=False
+            - PREFECT_API_DATABASE_MIGRATE_ON_START=True
+        ports:
+            - 4200:4200
+        networks:
+            - prefect_net
+
+volumes:
+    prefect:
+
+networks:
+    prefect_net:
+        external: true
