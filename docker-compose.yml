@@ -3,6 +3,8 @@ services:
         image: confluentinc/cp-zookeeper:latest
         environment:
             ZOOKEEPER_CLIENT_PORT: 2181
+        networks:
+            - prefect_net
 
     kafka:
         image: confluentinc/cp-kafka:latest
@@ -16,6 +18,8 @@ services:
             KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
             KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
             KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+        networks:
+            - prefect_net
 
     usgs-poller:
         build:
@@ -23,6 +27,8 @@ services:
         depends_on:
             - kafka
         working_dir: /app
+        networks:
+            - prefect_net
 
     usgs-consumer:
         build:

@@ -1,6 +1,7 @@
 from prefect import flow, task, get_run_logger
 import boto3
 from botocore.exceptions import ClientError
+import json
 
 @task
 def up_minio():
@@ -12,8 +13,7 @@ def up_minio():
         region_name='us-east-1'
     )
 
-@task
-def get_earthquakes_from_minio(s3:boto3, bucket="earthquakes"):
+def exists_bucket(s3:boto3, bucket="earthquakes"):
     try:
         s3.head_bucket(Bucket=bucket)
     except ClientError as e:
@@ -23,15 +23,30 @@ def get_earthquakes_from_minio(s3:boto3, bucket="earthquakes"):
         else:
             print("Error inesperado:", e)
 
-
-    return s3.get_object(
-            Bucket = bucket
-        )
 @task
 def get_list_objects(s3:boto3, bucket = "earthquakes"):
+    exists_bucket(s3)
     files = s3.list_objects_v2(
             Bucket = bucket
         )
+
+    return files
+
+@task
+def get_earthquakes_from_minio(s3:boto3, list_files, bucket="earthquakes"):
+    exists_bucket(s3)
+
+    files = []
+    for f in list_files["Contents"]:
+        s3_file = s3.get_object(
+            Bucket = bucket,
+            Key = f["Key"]
+        )
+
+        body = s3_file["Body"].read()
+
+        data = json.loads(body.decode('utf-8'))
+        files.append(data)
 
     return files
 
@@ -50,9 +65,9 @@ def upload_earthqaukes():
     logger.info(earthquakes_list)
     logger.info("Se rescata el listado de objetos en bucket")
 
-    #earthquakes = get_earthquakes_from_minio(s3)
-    #print(earthquakes)
-    #logger.info("Se extraen los archivos de S3")
+    earthquakes = get_earthquakes_from_minio(s3, earthquakes_list)
+    logger.info(earthquakes)
+    logger.info(f"Se extraen los archivos de S3. Cantidad de elementos: {len(earthquakes)}")
 
 if __name__ == '__main__':
 
