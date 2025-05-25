@@ -34,6 +34,8 @@ services:
             - ./Consumer:/app
             - ./Consumer/earthquakes:/app/earthquakes
         working_dir: /app
+        networks:
+            - prefect_net
 
     minio:
         image: minio/minio:latest
@@ -47,6 +49,12 @@ services:
         command: server /data --console-address ":9001"
         volumes:
             - minio_data:/data
+        networks:
+            - prefect_net
 
 volumes:
   minio_data:
+
+networks:
+    prefect_net:
+        external: true
